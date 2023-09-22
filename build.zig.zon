@@ -1,0 +1,11 @@
+.{
+    .name = "pong",
+    .version = "0.0.1",
+    .dependencies = .{
+        .zig_ecs= .{
+            .url = "https://github.com/menduz/zig-ecs/archive/c3053610d9567a4d80658fd453877034b6fa92ef.tar.gz",
+			.hash = "1220113a40707dbd7aa1e9cdee3bb17f5a089af29c06aa9975387c677f138fe68615",
+        },
+     }
+}
+
