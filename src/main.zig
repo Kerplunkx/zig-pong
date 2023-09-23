@@ -3,17 +3,16 @@ const aya = @import("aya");
 const math = aya.math;
 const ecs = @import("zig-ecs");
 
-const Ball = @import("ball.zig");
-const Paddle = @import("paddle.zig");
+const game = @import("game.zig");
+
+var allocator: std.mem.Allocator = undefined;
 
 var reg: ecs.Registry = undefined;
-var ball: Ball = undefined;
-var paddle: Paddle = undefined;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
-    var allocator = gpa.allocator();
+    allocator = gpa.allocator();
 
     reg = ecs.Registry.init(allocator);
     defer reg.deinit();
@@ -32,19 +31,15 @@ pub fn main() !void {
 }
 
 fn init() !void {
-    ball.init(&reg);
-    paddle.init(&reg);
+    game.init(&reg);
 }
 
 fn update() !void {
-    ball.move(&reg);
-    paddle.move(&reg);
-    paddle.confine(&reg);
+    game.update(&reg);
 }
 
 fn render() !void {
     aya.gfx.beginPass(.{ .color = math.Color.black });
-    ball.spawn(&reg);
-    paddle.spawn(&reg);
+    try game.render(allocator, &reg);
     aya.gfx.endPass();
 }

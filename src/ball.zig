@@ -1,12 +1,11 @@
-const std = @import("std");
 const aya = @import("aya");
 const math = aya.math;
 const ecs = @import("zig-ecs");
 const components = @import("ecs/components/components.zig");
 const paddle = @import("paddle.zig");
 
-const ball_size: f32 = 20;
-const velocity: f32 = 300;
+pub const size: f32 = 20;
+pub const velocity: f32 = 400;
 
 /// Creates a ball entity.
 pub fn init(_: @This(), reg: *ecs.Registry) void {
@@ -14,10 +13,10 @@ pub fn init(_: @This(), reg: *ecs.Registry) void {
     const half_height = @divExact(aya.window.height(), 2);
 
     var entity = reg.create();
-    reg.add(entity, components.Velocity{ .x = velocity, .y = velocity });
+    reg.add(entity, components.Velocity{ .x = velocity, .y = 0 });
     reg.add(entity, components.Transform{
         .translation = .{
-            .x = @as(f32, @floatFromInt(half_width)),
+            .x = @as(f32, @floatFromInt(half_width)) - size / 2.0,
             .y = @as(f32, @floatFromInt(half_height)),
         },
     });
@@ -30,12 +29,13 @@ pub fn spawn(_: @This(), reg: *ecs.Registry) void {
 
     while (iter.next()) |e| {
         const translation = view.getConst(components.Transform, e).translation;
-        aya.gfx.draw.rect(math.Vec2.init(translation.x, translation.y), ball_size, ball_size, math.Color.white);
+        aya.gfx.draw.rect(math.Vec2.init(translation.x, translation.y), size, size, math.Color.white);
     }
 }
 
 /// Handles ball movement.
 pub fn move(_: @This(), reg: *ecs.Registry) void {
+    // Not the cleanest code ever 🗿
     var ball_view = reg.view(.{components.Velocity}, .{components.Player});
     var ball_iter = ball_view.entityIterator();
     var paddle_view = reg.view(.{ components.Player, components.Transform }, .{});
@@ -62,19 +62,33 @@ pub fn move(_: @This(), reg: *ecs.Registry) void {
             const id = paddle_view.getConst(components.Player, p).id;
             switch (id) {
                 1 => {
-                    if ((ball_transform.*.translation.x <= paddle_transform.translation.x) and
+                    if ((ball_transform.*.translation.x <= paddle_transform.translation.x + paddle.width) and
                         (paddle_transform.translation.y) <= ball_transform.*.translation.y and
                         ball_transform.*.translation.y <= (paddle_transform.translation.y + paddle.height))
                     {
                         vel.*.x *= -1;
+                        if ((paddle_transform.translation.y <= ball_transform.*.translation.y) and
+                            (ball_transform.*.translation.y <= paddle_transform.translation.y + paddle.height / 2.0))
+                        {
+                            vel.*.y = velocity;
+                        } else {
+                            vel.*.y = -velocity;
+                        }
                     }
                 },
                 2 => {
-                    if ((ball_transform.*.translation.x >= paddle_transform.translation.x) and
+                    if ((ball_transform.*.translation.x + size >= paddle_transform.translation.x) and
                         (paddle_transform.translation.y) <= ball_transform.*.translation.y and
                         ball_transform.*.translation.y <= (paddle_transform.translation.y + paddle.height))
                     {
                         vel.*.x *= -1;
+                        if ((paddle_transform.translation.y <= ball_transform.*.translation.y) and
+                            (ball_transform.*.translation.y <= paddle_transform.translation.y + paddle.height / 2.0))
+                        {
+                            vel.*.y = velocity;
+                        } else {
+                            vel.*.y = -velocity;
+                        }
                     }
                 },
                 else => break,

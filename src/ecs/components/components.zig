@@ -6,4 +6,4 @@ pub const Velocity = struct { x: f32, y: f32 };
 // We don't really need rotation and scale for pong.
 pub const Transform = struct { translation: Translation };
 
-pub const Player = struct { id: u8 };
+pub const Player = struct { id: u8, score: u8 };
